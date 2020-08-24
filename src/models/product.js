@@ -74,7 +74,6 @@ const product = {
     })
   },
   insertProduct: (data) => {
-    console.log(data)
     return new Promise((resolve, reject) => {
       connection.query('INSERT INTO product SET ?', data, (err, result) => {
         if (!err) {

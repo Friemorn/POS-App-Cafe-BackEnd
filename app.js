@@ -14,6 +14,8 @@ app.use(morgan('dev'))
 app.use(cors())
 app.use('/api/v1/', routes)
 
+app.use('/api/v1/uploads', express.static('./uploads'))
+
 app.use((req, res) => {
   res.status(404)
   res.send({
@@ -25,6 +27,7 @@ app.use((req, res) => {
 })
 
 const port = process.env.port
+
 app.listen(port, () => {
   console.log(`server is running at port ${port}`)
 })

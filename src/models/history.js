@@ -46,7 +46,6 @@ const history = {
     })
   },
   insertHistory: (data) => {
-    console.log(data)
     return new Promise((resolve, reject) => {
       connection.query('INSERT INTO history SET ?', data, (err, result) => {
         if (!err) {

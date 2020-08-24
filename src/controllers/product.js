@@ -1,5 +1,7 @@
 const productModels = require('../models/product')
 const helper = require('../helpers/helpers')
+const redis = require('redis')
+const client = redis.createClient(process.env.PORT_REDIS)
 
 const product = {
   getProductById: (req, res) => {
@@ -141,6 +143,7 @@ const product = {
           }
 
           if (result.length > 0) {
+            client.setex('getAllProduct', 60*60*12 , JSON.stringify(result))
             helper.response(res, resultPage, result, 200, null)
           } else {
             helper.response(res, resultPage, 'Product Not Found', 200, null)
@@ -152,66 +155,73 @@ const product = {
     }
   },
   updateProduct: (req, res) => {
-    const id = req.params.id
-    const {
-      name,
-      image,
-      price,
-      idCategory,
-      status
-    } = req.body
-    const data = {
-      name,
-      image,
-      price,
-      idCategory,
-      status,
-      updatedAt: new Date()
+    if (req.roleId == '1') {
+      const id = req.params.id
+      const {
+        name,
+        image,
+        price,
+        idCategory
+      } = req.body
+      const data = {
+        name,
+        image,
+        price,
+        idCategory,
+        updatedAt: new Date()
+      }
+      productModels.updateProduct(id, data)
+        .then((result) => {
+          console.log(result)
+          helper.res(res, result, 200, null)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    } else {
+      helper.res(res, 'Update Product is Not Allowed', 200, null)
     }
-    productModels.updateProduct(id, data)
-      .then((result) => {
-        console.log(result)
-        helper.res(res, result, 200, null)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
   },
   deleteProduct: (req, res) => {
-    const id = req.params.id
-    productModels.deleteProduct(id)
-      .then((result) => {
-        helper.res(res, result, 200, null)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
+    if (req.roleId == '1') {
+      const id = req.params.id
+      productModels.deleteProduct(id)
+        .then((result) => {
+          helper.res(res, result, 200, null)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    } else {
+      helper.res(res, 'Delete Product is Not Allowed', 200, null)
+    }
   },
   insertProduct: (req, res) => {
-    const {
-      name,
-      image,
-      price,
-      idCategory,
-      status
-    } = req.body
-    const data = {
-      name,
-      image,
-      price,
-      idCategory,
-      status,
-      createdAt: new Date(),
-      updatedAt: new Date()
+    if (req.roleId == '1') {
+      const {
+        name,
+        price,
+        idCategory
+      } = req.body
+      const data = {
+        name,
+        image: `http://localhost:4000/api/v1/uploads/${req.file.filename}`,
+        price,
+        idCategory,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      productModels.insertProduct(data)
+        .then((result) => {
+          console.log(result)
+          helper.res(res, result, 200, null)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    } else {
+      helper.res(res, 'Insert Product is Not Allowed', 200, null)
     }
-    productModels.insertProduct(data)
-      .then((result) => {
-        console.log(result)
-        helper.res(res, result, 200, null)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
   }
 }
 
