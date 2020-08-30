@@ -1,7 +1,6 @@
 const productModels = require('../models/product')
 const helper = require('../helpers/helpers')
-const redis = require('redis')
-const client = redis.createClient(process.env.PORT_REDIS)
+const fs = require('fs')
 
 const product = {
   getProductById: (req, res) => {
@@ -143,7 +142,6 @@ const product = {
           }
 
           if (result.length > 0) {
-            client.setex('getAllProduct', 60*60*12 , JSON.stringify(result))
             helper.response(res, resultPage, result, 200, null)
           } else {
             helper.response(res, resultPage, 'Product Not Found', 200, null)
@@ -157,22 +155,27 @@ const product = {
   updateProduct: (req, res) => {
     if (req.roleId == '1') {
       const id = req.params.id
+      productModels.getProductById(id).then(result => {
+        const product = result[0]
+        const img = product.image.replace('http://localhost:4000/api/v1/uploads/', '')
+        const filePath = `./uploads/${img}`; 
+        fs.unlinkSync(filePath)
+      })
+
       const {
         name,
-        image,
         price,
         idCategory
       } = req.body
       const data = {
         name,
-        image,
+        image: `http://localhost:4000/api/v1/uploads/${req.file.filename}`,
         price,
         idCategory,
         updatedAt: new Date()
       }
       productModels.updateProduct(id, data)
         .then((result) => {
-          console.log(result)
           helper.res(res, result, 200, null)
         })
         .catch((err) => {
@@ -185,6 +188,12 @@ const product = {
   deleteProduct: (req, res) => {
     if (req.roleId == '1') {
       const id = req.params.id
+      productModels.getProductById(id).then(result => {
+        const product = result[0]
+        const img = product.image.replace('http://localhost:4000/api/v1/uploads/', '')
+        const filePath = `./uploads/${img}`
+        fs.unlinkSync(filePath)
+      })
       productModels.deleteProduct(id)
         .then((result) => {
           helper.res(res, result, 200, null)

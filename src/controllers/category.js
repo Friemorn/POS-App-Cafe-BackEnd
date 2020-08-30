@@ -1,5 +1,7 @@
 const categoryModels = require('../models/category')
 const helper = require('../helpers/helpers')
+const redis = require('redis')
+const client = redis.createClient(process.env.PORT_REDIS)
 
 const category = {
   getCategoryById: (req, res) => {
@@ -20,6 +22,7 @@ const category = {
     categoryModels.getAllCategory()
       .then((result) => {
         if (result.length > 0) {
+          client.setex('category', 60 * 60 * 12, JSON.stringify(result))
           helper.res(res, result, 200, null)
         } else {
           helper.res(res, 'Category Not Found', 200, null)
